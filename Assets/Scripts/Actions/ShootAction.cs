@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class ShootAction : BaseAction
 {
+    [SerializeField]
     private int maxShootDistance = 7;
     private enum State
     {
@@ -153,5 +154,9 @@ public class ShootAction : BaseAction
     public Unit GetTargetUnit()
     {
         return targetUnit;
+    }
+    public int GetMaxShootDistance()
+    {
+        return maxShootDistance;
     }
 }
