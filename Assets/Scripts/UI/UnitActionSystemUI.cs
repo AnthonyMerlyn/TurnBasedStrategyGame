@@ -20,11 +20,16 @@ public class UnitActionSystemUI : MonoBehaviour
         UnitActionSystem.Instance.OnSelectedUnitChanged += UnitActionSystem_OnSelectedUnitChanged;
         UnitActionSystem.Instance.OnSelcetedActionChanged += UnitActionSystem_OnSelcetedActionChanged;
         UnitActionSystem.Instance.OnActionStarted += UnitActionSystem_OnActionStarted;
+        Unit.OnAnyActionPointsChanged += Unit_OnAnyActionPointsChanged;
         CreateUnitActionButtons();
         UpdateSelectedVisual();
         UpdateActionPoints();
     }
 
+    private void Unit_OnAnyActionPointsChanged(object sender, EventArgs e)
+    {
+        UpdateActionPoints();
+    }
 
     private void CreateUnitActionButtons()
     {
