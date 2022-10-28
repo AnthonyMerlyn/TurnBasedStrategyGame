@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -6,6 +7,23 @@ public class GridSystemVisual : MonoBehaviour
 {
     
     public static GridSystemVisual Instance {get; private set;}
+    
+
+    [SerializeField] private List<GridVisualTypeMaterial> gridVisualTypeMaterialList;
+    public enum GridVisualType
+    {
+        White,
+        Blue,
+        Red,
+        Yellow
+    }
+
+    [SerializeField] public struct GridVisualTypeMaterial
+    {
+        public GridVisualType gridVisualType;
+        public Material material;
+    }
+
     [SerializeField] private Transform gridSystemVisualPrefab;
 
     private GridSystemVisualSingle[,] gridSystemVisualSingleArray;
@@ -22,7 +40,7 @@ public class GridSystemVisual : MonoBehaviour
     }
     private void Update() 
     {
-        UpdateGridVisual();
+
     }
 
     private void Start() 
@@ -38,6 +56,21 @@ public class GridSystemVisual : MonoBehaviour
                 gridSystemVisualSingleArray[x,z] = gridSystemVisualSingleTransform.GetComponent<GridSystemVisualSingle>();
             }
         }
+
+        UnitActionSystem.Instance.OnSelcetedActionChanged += UnitActionSystem_OnSelcetedActionChanged;
+        LevelGrid.Instance.OnAnyUnitMovedGridPosition += LevelGrid_OnAnyUnitMovedGridPosition;
+
+        UpdateGridVisual();
+    }
+
+    private void LevelGrid_OnAnyUnitMovedGridPosition(object sender, EventArgs e)
+    {
+        UpdateGridVisual();
+    }
+
+    private void UnitActionSystem_OnSelcetedActionChanged(object sender, EventArgs e)
+    {
+        UpdateGridVisual();
     }
 
     public void HideAllGridPositions()
