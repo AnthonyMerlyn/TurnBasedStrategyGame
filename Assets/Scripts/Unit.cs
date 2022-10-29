@@ -5,21 +5,27 @@ using UnityEngine;
 
 public class Unit : MonoBehaviour
 {
-    private const int ACTION_POINTS_MAX = 4;  
+    [SerializeField] private const int ACTION_POINTS_MAX = 2;  
+    [SerializeField] private int actionPoints = 2;
 
     public static event EventHandler OnAnyActionPointsChanged;
+    public static event EventHandler OnAnyUnitSpawned;
+    public static event EventHandler OnAnyUnitDead;
+
+
 
     [SerializeField] private bool isEnemy;
     private GridPosition gridPosition;
     private MoveAction moveAction;
     private SpinAction spinAction;
+    private ShootAction shootAction;
     private BaseAction[] baseActionArray;
-    private int actionPoints = 2;
     private HealthSystem healthSystem;
     private void Awake() 
     {
         moveAction = GetComponent<MoveAction>();
         spinAction = GetComponent<SpinAction>();
+        shootAction = GetComponent<ShootAction>();
         baseActionArray = GetComponents<BaseAction>();
         healthSystem = GetComponent<HealthSystem>();
     }
@@ -30,12 +36,16 @@ public class Unit : MonoBehaviour
         gridPosition = LevelGrid.Instance.GetGridPosition(transform.position);
         LevelGrid.Instance.AddUnitAtGridPosition(gridPosition, this);
         healthSystem.OnDead += healthSystem_OnDead;
+        OnAnyUnitSpawned?.Invoke(this, EventArgs.Empty);
     }
 
     private void healthSystem_OnDead(object sender, EventArgs e)
     {
         LevelGrid.Instance.RemoveUnitAtGridPosition(gridPosition,this);
+        
         Destroy(gameObject);
+        
+        OnAnyUnitDead?.Invoke(this, EventArgs.Empty);
     }
 
     private void TurnSystem_OnTurnChanged(object sender, EventArgs e)
@@ -64,6 +74,10 @@ public class Unit : MonoBehaviour
    public SpinAction GetSpinAction()
    {
     return spinAction;
+   }
+   public ShootAction GetShootAction()
+   {
+    return shootAction;
    }
 
    public GridPosition GetGridPosition()
@@ -114,5 +128,9 @@ public class Unit : MonoBehaviour
     public void Damage(int damageAmount)
     {
         healthSystem.Damage(damageAmount);
+    }
+    public float GetHealthNormalized()
+    {
+        return healthSystem.GetHealthNormalized();
     }
 }
