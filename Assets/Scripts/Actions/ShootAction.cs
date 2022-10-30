@@ -7,6 +7,8 @@ public class ShootAction : BaseAction
 {
     [SerializeField]
     private int maxShootDistance = 7;
+    [SerializeField]
+    private LayerMask obstaclesLayerMask;
     private enum State
     {
         Aiming,
@@ -17,6 +19,7 @@ public class ShootAction : BaseAction
     private State state;
     private float stateTimer;
     private bool canShootBullet;
+    public static event EventHandler<OnShootEventArgs> OnAnyShoot;
     public event EventHandler<OnShootEventArgs> OnShoot;
 
     public class OnShootEventArgs : EventArgs
@@ -59,6 +62,11 @@ public class ShootAction : BaseAction
 
     private void Shoot()
     {
+        OnAnyShoot?.Invoke(this,new OnShootEventArgs {
+            targetUnit = targetUnit,
+            shootingUnit = unit
+        });
+        
         OnShoot?.Invoke(this,new OnShootEventArgs {
             targetUnit = targetUnit,
             shootingUnit = unit
@@ -133,6 +141,20 @@ public class ShootAction : BaseAction
                 {
                     continue;
                 }
+
+                Vector3 unitWorldPosition = LevelGrid.Instance.GetWorldPosition(unitGridPosition);
+                Vector3 shootDir = (targetUnit.GetWorldPosition() - unitWorldPosition).normalized;
+                float unitShulderHeight = 1.7f;
+                if(Physics.Raycast(
+                    unitWorldPosition + Vector3.up * unitShulderHeight,
+                    shootDir,
+                    Vector3.Distance(unitWorldPosition, targetUnit.GetWorldPosition()),
+                    obstaclesLayerMask))
+                    {
+                        //Blocked by something which is higher than the units shoulder
+                        continue;
+                    }
+
                 validGridPositionList.Add(testGridPosition);
             }
         }
