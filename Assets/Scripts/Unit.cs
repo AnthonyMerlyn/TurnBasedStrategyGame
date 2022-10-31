@@ -1,49 +1,130 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class Unit : MonoBehaviour
 {
-    [SerializeField] private Animator unitAnimator;
-    private Vector3 targetPosition;
+    [SerializeField] private const int ACTION_POINTS_MAX = 2;  
+    [SerializeField] private int actionPoints = 2;
+
+    public static event EventHandler OnAnyActionPointsChanged;
+    public static event EventHandler OnAnyUnitSpawned;
+    public static event EventHandler OnAnyUnitDead;
+
+
+
+    [SerializeField] private bool isEnemy;
     private GridPosition gridPosition;
+    private BaseAction[] baseActionArray;
+    private HealthSystem healthSystem;
     private void Awake() 
     {
-        targetPosition = transform.position;
+        baseActionArray = GetComponents<BaseAction>();
+        healthSystem = GetComponent<HealthSystem>();
     }
 
     private void Start() 
     {
+        TurnSystem.Instance.OnTurnChanged += TurnSystem_OnTurnChanged;
         gridPosition = LevelGrid.Instance.GetGridPosition(transform.position);
         LevelGrid.Instance.AddUnitAtGridPosition(gridPosition, this);
+        healthSystem.OnDead += healthSystem_OnDead;
+        OnAnyUnitSpawned?.Invoke(this, EventArgs.Empty);
     }
+
+    private void healthSystem_OnDead(object sender, EventArgs e)
+    {
+        LevelGrid.Instance.RemoveUnitAtGridPosition(gridPosition,this);
+        
+        Destroy(gameObject);
+        
+        OnAnyUnitDead?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void TurnSystem_OnTurnChanged(object sender, EventArgs e)
+    {
+        if((IsEnemy() && !TurnSystem.Instance.IsPlayerTurn()) || (!IsEnemy() && TurnSystem.Instance.IsPlayerTurn()))
+        {        
+        actionPoints = ACTION_POINTS_MAX;
+        OnAnyActionPointsChanged?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
     private void Update() 
     {
-
-        float stoppingPosition = .1f;
-        if(Vector3.Distance(transform.position, targetPosition) > stoppingPosition)
-        {
-            Vector3 moveDirection = (targetPosition - transform.position).normalized;
-            float moveSpeed = 4f;
-            transform.position += moveDirection * moveSpeed * Time.deltaTime;
-            
-            float rotateSpeed = 10f;
-            transform.forward = Vector3.Lerp(transform.forward, moveDirection, Time.deltaTime * rotateSpeed);
-            unitAnimator.SetBool("isWalking", true);
-        }else
-        {
-            unitAnimator.SetBool("isWalking", false);
-        }
-
         GridPosition newGridPosition = LevelGrid.Instance.GetGridPosition(transform.position);
         if(newGridPosition != gridPosition)
         {
-            LevelGrid.Instance.UnitMovedGridPosition(this, gridPosition, newGridPosition);
+            GridPosition oldGridPosition = gridPosition;
             gridPosition = newGridPosition;
+            LevelGrid.Instance.UnitMovedGridPosition(this, oldGridPosition, newGridPosition);
         }
     }
-    public void Move(Vector3 targetPosition)
+
+    public T GetAction<T>() where T : BaseAction
     {
-            this.targetPosition = targetPosition;
+        foreach (BaseAction baseAction in baseActionArray)
+        {
+            if(baseAction is T)
+            {
+                return (T)baseAction;
+            }
+        }
+        return null;
+    }
+
+   public GridPosition GetGridPosition()
+   {
+        return gridPosition;
+   }
+
+   public Vector3 GetWorldPosition()
+   {
+    return transform.position;
+   }
+
+   public BaseAction[] GetBaseActionArray()
+   {
+    return baseActionArray;
+   }
+   public bool TrySpendActionPointsToTakeAction(BaseAction baseAction)
+   {
+        if(CanSpendActionPointToTakeAction(baseAction))
+        {
+            SpendActionPoints(baseAction.GetActionPointsCost());
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+   }
+    public bool CanSpendActionPointToTakeAction(BaseAction baseAction)
+    {
+        return actionPoints >= baseAction.GetActionPointsCost();
+    }
+
+    private void SpendActionPoints(int amount)
+    {
+        actionPoints -= amount;
+        OnAnyActionPointsChanged?.Invoke(this, EventArgs.Empty);
+    }
+    public int GetActionPoints()
+    {
+        return actionPoints;
+    }
+    public bool IsEnemy()
+    {
+        return isEnemy;
+    }
+
+    public void Damage(int damageAmount)
+    {
+        healthSystem.Damage(damageAmount);
+    }
+    public float GetHealthNormalized()
+    {
+        return healthSystem.GetHealthNormalized();
     }
 }
