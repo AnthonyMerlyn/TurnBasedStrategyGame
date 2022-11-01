@@ -25,6 +25,8 @@ public class GridSystemVisual : MonoBehaviour
     [SerializeField] private Transform gridSystemVisualPrefab;
     [SerializeField] private List<GridVisualTypeMaterial> gridVisualTypeMaterialList;
 
+    private GridSystemVisualSingle lastSelectedGridSystemVisualSingle;
+
     private GridSystemVisualSingle[,] gridSystemVisualSingleArray;
 
     private void Awake() 
@@ -37,9 +39,29 @@ public class GridSystemVisual : MonoBehaviour
         }
         Instance = this;
     }
-    private void Update() 
+    private void Update()
     {
+        //ShowVisualHexSelected();
+    }
 
+    private void ShowVisualHexSelected()
+    {
+        if (lastSelectedGridSystemVisualSingle != null)
+        {
+            lastSelectedGridSystemVisualSingle.HideSelected();
+        }
+
+        Vector3 mouseWorldPosition = MouseWorld.GetPosition();
+        GridPosition gridPosition = LevelGrid.Instance.GetGridPosition(mouseWorldPosition);
+        if (LevelGrid.Instance.IsValidGridPosition(gridPosition))
+        {
+            lastSelectedGridSystemVisualSingle = gridSystemVisualSingleArray[gridPosition.x, gridPosition.z];
+        }
+
+        if (lastSelectedGridSystemVisualSingle != null)
+        {
+            lastSelectedGridSystemVisualSingle.ShowSelected();
+        }
     }
 
     private void Start() 
@@ -60,6 +82,15 @@ public class GridSystemVisual : MonoBehaviour
         LevelGrid.Instance.OnAnyUnitMovedGridPosition += LevelGrid_OnAnyUnitMovedGridPosition;
 
         UpdateGridVisual();
+
+        // ----------------------------------------- TO GENERATE THE TEST HEX GRID ---------------------------------------------------
+        // for (int x = 0; x < LevelGrid.Instance.GetWidth(); x++)
+        // {
+        //     for (int z = 0; z < LevelGrid.Instance.GetHight(); z++)
+        //     {
+        //         gridSystemVisualSingleArray[x, z].Show(GetGridVisualTypeMaterial(GridVisualType.White));
+        //     }
+        // }
     }
 
     private void LevelGrid_OnAnyUnitMovedGridPosition(object sender, EventArgs e)
