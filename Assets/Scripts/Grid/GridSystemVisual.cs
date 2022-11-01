@@ -166,6 +166,9 @@ public class GridSystemVisual : MonoBehaviour
                 case GranateAction granateAction:
                 gridVisualType = GridVisualType.Yellow;
                 break;
+                case InteractAction interactAction:
+                gridVisualType = GridVisualType.Blue;
+                break;
                 default:
                 gridVisualType = GridVisualType.White;
                 break;
