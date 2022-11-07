@@ -5,7 +5,8 @@ using UnityEngine;
 
 public class Door : MonoBehaviour, IInteractable
 {
-    [SerializeField] private bool isOpen;
+    [SerializeField]
+    private bool isOpen;
     private GridPosition gridPosition;
     private Animator animator;
     private Action onInteractionComplete;
@@ -16,6 +17,7 @@ public class Door : MonoBehaviour, IInteractable
     {
         animator = GetComponent<Animator>();
     }
+    
     private void Start()
     {
         gridPosition = LevelGrid.Instance.GetGridPosition(transform.position);
@@ -30,6 +32,7 @@ public class Door : MonoBehaviour, IInteractable
             CloseDoor();
         }
     }
+    
    public void Interact(Action onInteractionComplete)
    {
         this.onInteractionComplete = onInteractionComplete;
@@ -44,6 +47,7 @@ public class Door : MonoBehaviour, IInteractable
             CloseDoor();
         }
    }
+   
    private void Update()
    {
         if(!isActive)
